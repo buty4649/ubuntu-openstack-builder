@@ -11,4 +11,9 @@ RUN sed -i -e 's/archive.ubuntu.com/jp.archive.ubuntu.com/g' \
     apt-get install -y devscripts software-properties-common
 
 RUN apt-get source neutron && apt-get build-dep -y neutron
-RUN cd neutron-8.4.0 && debuild -uc -us -b
+
+ADD patch patch
+WORKDIR neutron-8.4.0
+RUN ls -1 ../patch/*.patch | xargs cat | patch -Np1
+
+RUN debuild -uc -us -b

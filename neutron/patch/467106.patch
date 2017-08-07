@@ -1,0 +1,57 @@
+diff -Naur a/neutron/agent/l3/agent.py b/neutron/agent/l3/agent.py
+--- a/neutron/agent/l3/agent.py	2017-08-03 12:14:53.000000000 +0000
++++ b/neutron/agent/l3/agent.py	2017-08-07 07:11:04.408950304 +0000
+@@ -563,6 +563,10 @@
+         prev_router_ids = set(self.router_info)
+         curr_router_ids = set()
+         timestamp = timeutils.utcnow()
++        is_snat_agent = (self.conf.agent_mode ==
++                         l3_constants.L3_AGENT_MODE_DVR_SNAT)
++        is_dvr_only_agent = (self.conf.agent_mode ==
++                             l3_constants.L3_AGENT_MODE_DVR)
+ 
+         try:
+             router_ids = ([self.conf.router_id] if self.conf.router_id else
+@@ -580,14 +584,12 @@
+                         # need to keep fip namespaces as well
+                         ext_net_id = (r['external_gateway_info'] or {}).get(
+                             'network_id')
+-                        is_snat_agent = (self.conf.agent_mode ==
+-                            l3_constants.L3_AGENT_MODE_DVR_SNAT)
+                         if ext_net_id:
+                             ns_manager.keep_ext_net(ext_net_id)
+                         elif is_snat_agent:
+                             ns_manager.ensure_snat_cleanup(r['id'])
+                     # For HA routers check that DB state matches actual state
+-                    if r.get('ha'):
++                    if r.get('ha') and not is_dvr_only_agent:
+                         self.check_ha_state_for_router(
+                             r['id'], r.get(l3_constants.HA_ROUTER_STATE_KEY))
+                     update = queue.RouterUpdate(
+diff -Naur a/neutron/tests/unit/agent/l3/test_agent.py b/neutron/tests/unit/agent/l3/test_agent.py
+--- a/neutron/tests/unit/agent/l3/test_agent.py	2017-08-03 12:14:53.000000000 +0000
++++ b/neutron/tests/unit/agent/l3/test_agent.py	2017-08-07 07:11:26.600977942 +0000
+@@ -247,6 +247,23 @@
+             check.assert_called_once_with(ha_id,
+                                           l3_constants.HA_ROUTER_STATE_STANDBY)
+ 
++    def test_periodic_sync_routers_task_not_check_ha_state_for_router(self):
++        # DVR-only agent should not trigger ha state check
++        self.conf.set_override('agent_mode', l3_constants.L3_AGENT_MODE_DVR)
++        agent = l3_agent.L3NATAgentWithStateReport(HOSTNAME, self.conf)
++        ha_id = _uuid()
++        active_routers = [
++            {'id': ha_id,
++             l3_constants.HA_ROUTER_STATE_KEY: l3_constants.HA_ROUTER_STATE_STANDBY,
++             'ha': True},
++            {'id': _uuid()}]
++        self.plugin_api.get_router_ids.return_value = [r['id'] for r
++                                                       in active_routers]
++        self.plugin_api.get_routers.return_value = active_routers
++        with mock.patch.object(agent, 'check_ha_state_for_router') as check:
++            agent.periodic_sync_routers_task(agent.context)
++            self.assertFalse(check.called)
++
+     def test_periodic_sync_routers_task_raise_exception(self):
+         agent = l3_agent.L3NATAgent(HOSTNAME, self.conf)
+         self.plugin_api.get_router_ids.return_value = ['fake_id']
