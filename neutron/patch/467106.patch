@@ -1,14 +1,14 @@
 diff -Naur a/neutron/agent/l3/agent.py b/neutron/agent/l3/agent.py
 --- a/neutron/agent/l3/agent.py	2017-08-03 12:14:53.000000000 +0000
-+++ b/neutron/agent/l3/agent.py	2017-08-07 05:42:49.022668763 +0000
++++ b/neutron/agent/l3/agent.py	2017-08-07 07:11:04.408950304 +0000
 @@ -563,6 +563,10 @@
          prev_router_ids = set(self.router_info)
          curr_router_ids = set()
          timestamp = timeutils.utcnow()
 +        is_snat_agent = (self.conf.agent_mode ==
-+                         lib_const.L3_AGENT_MODE_DVR_SNAT)
++                         l3_constants.L3_AGENT_MODE_DVR_SNAT)
 +        is_dvr_only_agent = (self.conf.agent_mode ==
-+                             lib_const.L3_AGENT_MODE_DVR)
++                             l3_constants.L3_AGENT_MODE_DVR)
  
          try:
              router_ids = ([self.conf.router_id] if self.conf.router_id else
@@ -30,19 +30,19 @@ diff -Naur a/neutron/agent/l3/agent.py b/neutron/agent/l3/agent.py
                      update = queue.RouterUpdate(
 diff -Naur a/neutron/tests/unit/agent/l3/test_agent.py b/neutron/tests/unit/agent/l3/test_agent.py
 --- a/neutron/tests/unit/agent/l3/test_agent.py	2017-08-03 12:14:53.000000000 +0000
-+++ b/neutron/tests/unit/agent/l3/test_agent.py	2017-08-07 05:41:37.894597214 +0000
++++ b/neutron/tests/unit/agent/l3/test_agent.py	2017-08-07 07:11:26.600977942 +0000
 @@ -247,6 +247,23 @@
              check.assert_called_once_with(ha_id,
                                            l3_constants.HA_ROUTER_STATE_STANDBY)
  
 +    def test_periodic_sync_routers_task_not_check_ha_state_for_router(self):
 +        # DVR-only agent should not trigger ha state check
-+        self.conf.set_override('agent_mode', lib_constants.L3_AGENT_MODE_DVR)
++        self.conf.set_override('agent_mode', l3_constants.L3_AGENT_MODE_DVR)
 +        agent = l3_agent.L3NATAgentWithStateReport(HOSTNAME, self.conf)
 +        ha_id = _uuid()
 +        active_routers = [
 +            {'id': ha_id,
-+             n_const.HA_ROUTER_STATE_KEY: n_const.HA_ROUTER_STATE_STANDBY,
++             l3_constants.HA_ROUTER_STATE_KEY: l3_constants.HA_ROUTER_STATE_STANDBY,
 +             'ha': True},
 +            {'id': _uuid()}]
 +        self.plugin_api.get_router_ids.return_value = [r['id'] for r
