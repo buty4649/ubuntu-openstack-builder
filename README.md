@@ -42,3 +42,10 @@ Preference => Daemon => Advanced を編集し、 `ipv6` と `fixed-cidr-v6` を�
 ```
 $ make neutron
 ```
+
+If you set environemnt value, you write to .env file.
+
+```
+$ cat .env
+DEB_BUILD_OPTIONS=nocheck
+```
