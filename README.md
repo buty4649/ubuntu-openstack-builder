@@ -8,7 +8,7 @@ DockerでIPv6を使うには以下を参考。
 
 [IPv6 with Docker](https://docs.docker.com/engine/userguide/networking/default_network/ipv6/)
 
-Ubuntu 16.06での設定例。
+### Ubuntu 16.06
 
 ```
 $ sudo systemctl edit --full docker
@@ -22,4 +22,17 @@ ExecStart=/usr/bin/dockerd -H fd:// --ipv6 --fixed-cidr-v6="2001:db8:1::/64"  �
 ExecReload=/bin/kill -s HUP $MAINPID
 -- -- snip -- --
 $ sudo systemctl restart docker
+```
+
+### Docker for Mac
+
+Preference => Daemon => Advanced を編集し、 `ipv6` と `fixed-cidr-v6` を設定します。
+
+```json
+{
+  "debug" : true,
+  "experimental" : true,
+  "ipv6": true,
+  "fixed-cidr-v6" : "2001:db8:1::/64"
+}
 ```
