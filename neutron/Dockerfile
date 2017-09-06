@@ -12,8 +12,8 @@ RUN sed -i -e 's/archive.ubuntu.com/jp.archive.ubuntu.com/g' \
 
 RUN apt-get source neutron && apt-get build-dep -y neutron
 
-ADD patch patch
-WORKDIR neutron-8.4.0
-RUN ls -1 ../patch/*.patch | xargs cat | patch -Np1
+ADD entrypoint.sh /entrypoint.sh
 
-RUN debuild -uc -us -b
+WORKDIR neutron-8.4.0
+
+ENTRYPOINT /entrypoint.sh
