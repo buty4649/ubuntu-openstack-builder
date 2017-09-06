@@ -40,7 +40,12 @@ Preference => Daemon => Advanced を編集し、 `ipv6` と `fixed-cidr-v6` を�
 ## build
 
 ```
-$ cd neutron
-$ docker build -t pepabo/neutron-deb-builder .
-$ docker run -v "$(pwd)/patch:/patch" pepabo/neutron-deb-builder
+$ make neutron
+```
+
+If you set environemnt value, you write to .env file.
+
+```
+$ cat .env
+DEB_BUILD_OPTIONS=nocheck
 ```
